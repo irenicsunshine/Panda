@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis";
 import { NextRequest, NextResponse } from "next/server";
+import { backendClient } from "@/lib/edgestore-router";
 
 const redis = Redis.fromEnv();
 
@@ -27,6 +28,9 @@ export async function GET(
   const contentType = fileRes.headers.get("content-type") ?? "application/octet-stream";
   const contentDisposition = fileRes.headers.get("content-disposition") ?? "attachment";
   const buffer = await fileRes.arrayBuffer();
+
+  // Delete from EdgeStore after fetching
+  await backendClient.publicFiles.deleteFile({ url: edgestoreUrl });
 
   return new NextResponse(buffer, {
     status: 200,
